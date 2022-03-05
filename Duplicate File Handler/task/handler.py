@@ -1,12 +1,14 @@
 import hashlib
 import os
+import re
 import sys
 from os.path import splitext, getsize
 
 args = sys.argv
 rev = False
 
-def ask(q, yes, no):
+
+def ask(q, yes='yes', no='no'):
     while True:
         cmd = input(f"\n{q}\n").lower()
         if cmd not in (yes, no):
@@ -37,7 +39,7 @@ else:
         print(f"\n{size} bytes")
         print(*dic[size], sep='\n')
 
-    if ask("Check for duplicates?", 'yes', 'no'):
+    if ask("Check for duplicates?"):
         h_dic = {}
         for size in dic:
             for fn in dic[size]:
@@ -60,3 +62,20 @@ else:
                         n += 1
                         print(f"{n}. {fn}")
 
+        if ask("Delete files?"):
+            while True:
+                lst = input("Enter file numbers to delete:\n")
+                if lst and re.match('[0-9]+\\s?', lst) and lst[-1] <= str(n):
+                    break
+                else:
+                    print("Wrong format")
+            n = 0
+            space = 0
+            for size in sorted(h_dic, reverse=rev):
+                for h in h_dic[size]:
+                    for fn in h_dic[size][h]:
+                        n += 1
+                        if str(n) in lst.split():
+                            space += getsize(fn)
+                            os.remove(fn)
+            print(f"Total freed up space: {space} bytes")
